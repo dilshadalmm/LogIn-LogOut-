@@ -244,9 +244,73 @@
             color: #16a34a;
         }
 
+        /* Dashboard Styles */
+        .dashboard {
+            display: none;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .dashboard h2 {
+            color: #4f46e5;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .dashboard-btn {
+            padding: 12px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dashboard-btn:hover {
+            background: #4338ca;
+        }
+
+        .dashboard-btn.secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .dashboard-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
         /* Form states */
         #forgotPasswordForm, #registerForm {
             display: none;
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 480px) {
@@ -287,7 +351,10 @@
                     <i class="fas fa-lock"></i>
                     <input type="password" id="loginPassword" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                <button type="submit" class="btn" id="loginBtn">
+                    <div class="loader" id="loginLoader"></div>
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
                 
                 <div class="links">
                     <a href="#" id="forgotPasswordLink">Forgot password?</a>
@@ -321,14 +388,17 @@
                 <div class="input-group">
                     <label for="registerPassword">Password</label>
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="registerPassword" placeholder="Create a password" required>
+                    <input type="password" id="registerPassword" placeholder="Create a password (min. 6 characters)" required>
                 </div>
                 <div class="input-group">
                     <label for="registerConfirmPassword">Confirm Password</label>
                     <i class="fas fa-lock"></i>
                     <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required>
                 </div>
-                <button type="submit" class="btn"><i class="fas fa-user-plus"></i> Create Account</button>
+                <button type="submit" class="btn" id="registerBtn">
+                    <div class="loader" id="registerLoader"></div>
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
                 
                 <div class="form-toggle">
                     Already have an account? <a href="#" id="loginLink">Sign In</a>
@@ -342,24 +412,54 @@
                     <i class="fas fa-envelope"></i>
                     <input type="email" id="resetEmail" placeholder="Enter your email" required>
                 </div>
-                <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
+                <button type="submit" class="btn" id="resetBtn">
+                    <div class="loader" id="resetLoader"></div>
+                    <i class="fas fa-paper-plane"></i> Send Reset Link
+                </button>
                 
                 <div class="form-toggle">
                     Remember your password? <a href="#" id="backToLoginLink">Sign In</a>
                 </div>
             </form>
+
+            <!-- Dashboard (shown after login) -->
+            <div id="dashboard" class="dashboard">
+                <h2>Welcome to Your Dashboard!</h2>
+                <div class="user-info">
+                    <p>You are successfully logged in as: <span id="userEmail"></span></p>
+                </div>
+                <p>This is your secure dashboard where you can access all the features of AuthNexus.</p>
+                
+                <div class="dashboard-actions">
+                    <button class="dashboard-btn" onclick="showFeature('profile')">
+                        <i class="fas fa-user"></i> View Profile
+                    </button>
+                    <button class="dashboard-btn" onclick="showFeature('settings')">
+                        <i class="fas fa-cog"></i> Account Settings
+                    </button>
+                    <button class="dashboard-btn secondary" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+                
+                <div id="featureContent" style="margin-top: 20px; text-align: left; display: none;">
+                    <h3 id="featureTitle"></h3>
+                    <p id="featureDescription"></p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Firebase configuration - replace with your actual config
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyB7t1epo6Vsi-zhjmFoYEkznUfmAoxfRyY",
+            authDomain: "tutorup-dilshad.firebaseapp.com",
+            projectId: "tutorup-dilshad",
+            storageBucket: "tutorup-dilshad.firebasestorage.app",
+            messagingSenderId: "845385268581",
+            appId: "1:845385268581:web:8af0729bd46012dc3a758c",
+            measurementId: "G-XQE1WF1V63"
         };
 
         // Initialize Firebase
@@ -370,23 +470,81 @@
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const dashboard = document.getElementById('dashboard');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
+        const userEmail = document.getElementById('userEmail');
 
         // Form Toggle Links
         const forgotPasswordLink = document.getElementById('forgotPasswordLink');
         const registerLink = document.getElementById('registerLink');
         const loginLink = document.getElementById('loginLink');
         const backToLoginLink = document.getElementById('backToLoginLink');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Buttons with loaders
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const loginLoader = document.getElementById('loginLoader');
+        const registerLoader = document.getElementById('registerLoader');
+        const resetLoader = document.getElementById('resetLoader');
 
         // Show/hide forms
         function showForm(formToShow) {
             loginForm.style.display = 'none';
             registerForm.style.display = 'none';
             forgotPasswordForm.style.display = 'none';
+            dashboard.style.display = 'none';
             formToShow.style.display = 'block';
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
+            
+            // Clear all form fields when switching
+            document.querySelectorAll('input').forEach(input => {
+                input.value = '';
+            });
+        }
+
+        // Show dashboard
+        function showDashboard(email) {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            forgotPasswordForm.style.display = 'none';
+            dashboard.style.display = 'block';
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            userEmail.textContent = email;
+        }
+
+        // Show loading state
+        function setLoading(button, loader, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                loader.style.display = 'block';
+                button.querySelector('i').style.display = 'none';
+            } else {
+                button.disabled = false;
+                loader.style.display = 'none';
+                button.querySelector('i').style.display = 'inline-block';
+            }
+        }
+
+        // Show feature content on dashboard
+        function showFeature(feature) {
+            const featureContent = document.getElementById('featureContent');
+            const featureTitle = document.getElementById('featureTitle');
+            const featureDescription = document.getElementById('featureDescription');
+            
+            featureContent.style.display = 'block';
+            
+            if (feature === 'profile') {
+                featureTitle.textContent = 'User Profile';
+                featureDescription.textContent = 'Here you can view and edit your personal information, update your profile picture, and manage your account preferences.';
+            } else if (feature === 'settings') {
+                featureTitle.textContent = 'Account Settings';
+                featureDescription.textContent = 'Manage your security settings, notification preferences, and connected applications. You can also change your password or enable two-factor authentication here.';
+            }
         }
 
         // Event listeners for form toggling
@@ -410,17 +568,29 @@
             showForm(loginForm);
         });
 
+        // Logout functionality
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                showForm(loginForm);
+                showSuccess('You have been successfully logged out.');
+            }).catch((error) => {
+                showError('Error signing out: ' + error.message);
+            });
+        });
+
         // Display messages
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
             successMessage.style.display = 'none';
+            window.scrollTo(0, 0);
         }
 
         function showSuccess(message) {
             successMessage.textContent = message;
             successMessage.style.display = 'block';
             errorMessage.style.display = 'none';
+            window.scrollTo(0, 0);
         }
 
         // Login functionality
@@ -429,17 +599,32 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
+            setLoading(loginBtn, loginLoader, true);
+            
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     // Signed in
-                    showSuccess('Login successful! Redirecting...');
-                    // Redirect to dashboard or home page
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1500);
+                    setLoading(loginBtn, loginLoader, false);
+                    showDashboard(email);
                 })
                 .catch((error) => {
-                    showError(error.message);
+                    setLoading(loginBtn, loginLoader, false);
+                    let errorMsg = "An error occurred during sign in.";
+                    switch(error.code) {
+                        case 'auth/invalid-email':
+                            errorMsg = "The email address is not valid.";
+                            break;
+                        case 'auth/user-disabled':
+                            errorMsg = "This user account has been disabled.";
+                            break;
+                        case 'auth/user-not-found':
+                            errorMsg = "No user found with this email address.";
+                            break;
+                        case 'auth/wrong-password':
+                            errorMsg = "Incorrect password.";
+                            break;
+                    }
+                    showError(errorMsg);
                 });
         });
 
@@ -451,10 +636,17 @@
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+
             if (password !== confirmPassword) {
                 showError('Passwords do not match');
                 return;
             }
+
+            setLoading(registerBtn, registerLoader, true);
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
@@ -463,14 +655,32 @@
                     // Update user profile with name
                     userCredential.user.updateProfile({
                         displayName: name
+                    }).then(() => {
+                        setLoading(registerBtn, registerLoader, false);
+                        // Switch to login form after a delay
+                        setTimeout(() => {
+                            showForm(loginForm);
+                        }, 2000);
                     });
-                    // Switch to login form after a delay
-                    setTimeout(() => {
-                        showForm(loginForm);
-                    }, 2000);
                 })
                 .catch((error) => {
-                    showError(error.message);
+                    setLoading(registerBtn, registerLoader, false);
+                    let errorMsg = "An error occurred during registration.";
+                    switch(error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMsg = "This email address is already in use.";
+                            break;
+                        case 'auth/invalid-email':
+                            errorMsg = "The email address is not valid.";
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorMsg = "Email/password accounts are not enabled.";
+                            break;
+                        case 'auth/weak-password':
+                            errorMsg = "The password is too weak.";
+                            break;
+                    }
+                    showError(errorMsg);
                 });
         });
 
@@ -479,12 +689,25 @@
             e.preventDefault();
             const email = document.getElementById('resetEmail').value;
 
+            setLoading(resetBtn, resetLoader, true);
+
             auth.sendPasswordResetEmail(email)
                 .then(() => {
+                    setLoading(resetBtn, resetLoader, false);
                     showSuccess('Password reset email sent! Check your inbox.');
                 })
                 .catch((error) => {
-                    showError(error.message);
+                    setLoading(resetBtn, resetLoader, false);
+                    let errorMsg = "An error occurred while sending reset email.";
+                    switch(error.code) {
+                        case 'auth/invalid-email':
+                            errorMsg = "The email address is not valid.";
+                            break;
+                        case 'auth/user-not-found':
+                            errorMsg = "No user found with this email address.";
+                            break;
+                    }
+                    showError(errorMsg);
                 });
         });
 
@@ -496,6 +719,17 @@
         document.querySelector('.social-btn.facebook').addEventListener('click', () => {
             showError('Facebook login not implemented in demo');
         });
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, show dashboard
+                showDashboard(user.email);
+            } else {
+                // User is signed out, show login form
+                showForm(loginForm);
+            }
+        });
     </script>
 </body>
-    </html>
+</html>
